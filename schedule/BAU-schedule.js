@@ -70,8 +70,8 @@ async function initBAU(bot) {
     // DDI JOB
     rule = schedule.getScheduleRule();
     rule.dayOfWeek = [0, new schedule.getScheduleRange(1, 7)];
-    rule.hour = 23;
-    rule.minute = 39;
+    rule.hour = 22;
+    rule.minute = 30;
     schedule.setSchedule(rule, async () => {
         let contact = await bot.Contact.find({name:'文件传输助手'});
         let str = await sihuo.getDDIStatus();
