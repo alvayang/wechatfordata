@@ -1,5 +1,6 @@
 const schedule = require('../util/schedule-util');
 const OrclUtil = require('../util/orcl-util');
+const sihuo = require('../util/sihuo');
 
 // 创建每日定时任务
 async function initBAU(bot) {
@@ -62,10 +63,20 @@ async function initBAU(bot) {
     rule.minute = 30;
     schedule.setSchedule(rule, async () => {
         let contact = await bot.Contact.find({name:'dong~dong~'});
-        // let one = await sihuo.getOne();
         let weather = await sihuo.getWeather();
         let str = '今日天气\r\n' + weather.weatherTips +'\r\n' +weather.todayWeather;
         await contact.say(str)
+    });
+    // DDI JOB
+    rule = schedule.getScheduleRule();
+    rule.dayOfWeek = [0, new schedule.getScheduleRange(1, 7)];
+    rule.hour = 23;
+    rule.minute = 39;
+    schedule.setSchedule(rule, async () => {
+        let contact = await bot.Contact.find({name:'文件传输助手'});
+        let str = await sihuo.getDDIStatus();
+        console.log(str);
+        await contact.say(str);
     });
 }
 

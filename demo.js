@@ -122,8 +122,12 @@ async function onMessage(msg) {
     } else if(content === '天气预报') {
         console.log('天气预报event！');
         sayOrquiet = true;
-        let weather = await sihuo.getWeather();
-        say_someting = '今日天气\r\n' + weather.weatherTips +'\r\n' +weather.todayWeather;
+        await contact.sync();
+        let province = contact.province();
+        let city = contact.city();
+        console.log(city, province);
+        let weather = await sihuo.getWeather(province, city);
+        say_someting = city + '今日天气\r\n' + weather.weatherTips +'\r\n' +weather.todayWeather;
         await contact_for_say.say(say_someting)
     } else {
         sayOrquiet = false;
