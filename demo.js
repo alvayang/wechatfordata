@@ -2,7 +2,7 @@ const { Wechaty } = require('wechaty');
 const { PuppetPadplus } = require ('wechaty-puppet-padplus');
 const QrcodeTerminal = require('qrcode-terminal');
 const OrclUtil = require('./util/orcl-util');
-const sihuo = require('./util/sihuo')
+const sihuo = require('./util/sihuo');
 const BAU_schedule = require("./schedule/BAU-schedule");
 let iniParser = require('iniparser');
 let config = iniParser.parseSync('resource/config.ini');
@@ -47,7 +47,7 @@ async function onMessage(msg) {
     /*if (msg.self()) {
             return
         }*/
-    if (msg.type() !== bot.Message.Type.Text ) {
+    if (msg.type() !== bot.Message.Type.Text && msg.type() !== bot.Message.Type.Recalled) {
         return
     }
     const content = msg.text();
@@ -64,7 +64,24 @@ async function onMessage(msg) {
         // console.log(`Message in Person: Content: ${content}, Contact: ${contact}, Room: ${await room.topic()}`)
         contact_for_say = room;
     }
-
+    // 撤回处理
+    if (msg.type() === bot.Message.Type.Recalled) {
+        const recalledMessage = await msg.toRecalled();
+        say_someting = '撤回事件激活：\r\n' + recalledMessage;
+        let me = await bot.Contact.findAll({name:'王某人'});
+        console.log(me);
+        if (room === null) {
+            me[1].say(say_someting);
+        } else {
+            console.log(room.topic());
+            if (room.topic().indexOf('佬常') >= 0) {
+                room.say(say_someting);
+            } else {
+                me[1].say(say_someting);
+            }
+        }
+        console.log(`Message: ${recalledMessage} has been recalled.`)
+    }
     if (content === 'wechaty') {
         say_someting = 'welcome to wechaty!';
         await contact_for_say.say(say_someting);
