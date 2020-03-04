@@ -31,6 +31,7 @@ async function onLogin (user) {
 
 //scan
 function onScan(qrCode, status) {
+    console.log('onScan Event!');
     console.log(`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qrCode)}`)
     QrcodeTerminal.generate('This will be a small QRCode, eh!', {small: true}, function (qrCode) {
         console.log(qrCode)
@@ -65,19 +66,26 @@ async function onMessage(msg) {
         contact_for_say = room;
     }
     // 撤回处理
+    console.log(msg.type());
     if (msg.type() === bot.Message.Type.Recalled) {
+        console.log('RecalledEvent!');
         const recalledMessage = await msg.toRecalled();
         say_someting = '撤回事件激活：\r\n' + recalledMessage;
-        let me = await bot.Contact.findAll({name:'王某人'});
-        console.log(me);
+        let me = await bot.Contact.find({name:'王某人'});
         if (room === null) {
-            me[1].say(say_someting);
+            me.say(say_someting);
         } else {
-            console.log(room.topic());
-            if (room.topic().indexOf('佬常') >= 0) {
+            room.sync();
+            // let room = bot.Room.load('xxxx@chatroom');
+            console.log(room);
+            let topic = await room.topic();
+            // room.say(say_someting);
+            if (topic.indexOf('佬常') >= 0) {
+                console.log('recalled for 佬常');
                 room.say(say_someting);
             } else {
-                me[1].say(say_someting);
+                console.log('recalled for me');
+                me.say(say_someting);
             }
         }
         console.log(`Message: ${recalledMessage} has been recalled.`)

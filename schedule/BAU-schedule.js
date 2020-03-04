@@ -26,7 +26,7 @@ async function initBAU(bot) {
                 say_bau = 'e=ESM JOB 未启动';
             }
             // const room = await bot.Room.find({topic: '佬常头部二号'});
-            const contact = await bot.Contact.find({name: '文件传输助手'});
+            const contact = await bot.Contact.find({name: '王某人'});
             await contact.say(say_bau);
             console.log('say_bau=' + say_bau);
         })();
@@ -35,7 +35,7 @@ async function initBAU(bot) {
     rule = schedule.getScheduleRule();
     rule.dayOfWeek = [0, new schedule.getScheduleRange(1, 5)];
     rule.hour = 8;
-    rule.minute = 53;
+    rule.minute = 35;
     schedule.setSchedule(rule, async () => {
         (async () => {
             say_bau = '---Webcasting Sync Check---\r\n';
@@ -73,7 +73,7 @@ async function initBAU(bot) {
     rule.hour = 22;
     rule.minute = 30;
     schedule.setSchedule(rule, async () => {
-        let contact = await bot.Contact.find({name:'文件传输助手'});
+        let contact = await bot.Contact.find({name:'王某人'});
         let str = await sihuo.getDDIStatus();
         console.log(str);
         await contact.say(str);
