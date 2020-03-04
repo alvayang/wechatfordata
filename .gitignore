@@ -3,3 +3,4 @@ node_modules
 bot-data-for-bau.memory-card.json
 wechatfordata.zip
 resource/config.ini
+files/*

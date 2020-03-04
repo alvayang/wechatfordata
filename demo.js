@@ -4,23 +4,24 @@ const QrcodeTerminal = require('qrcode-terminal');
 const OrclUtil = require('./util/orcl-util');
 const sihuo = require('./util/sihuo');
 const BAU_schedule = require("./schedule/BAU-schedule");
+const Bagpipe = require('bagpipe');
+const { FileBox } = require('file-box');
 const fs = require('fs');
 const FileUtil = require('./util/file-util');
 let iniParser = require('iniparser');
 let config = iniParser.parseSync('resource/config.ini');
 
 const token = config['SECRET']['token'];
-
 const puppet = new PuppetPadplus({
     token,
 });
-
-const name  = 'bot-data-for-bau'
-
+const name  = 'bot-data-for-bau';
 const bot = new Wechaty({
     puppet,
     name, // generate xxxx.memory-card.json and save login data for the next login
 });
+
+const bagpipe = new Bagpipe(5000); // 设定最大并发数
 
 // 登录
 async function onLogin (user) {
@@ -113,6 +114,7 @@ async function onMessage(msg) {
     } else if (content.indexOf('直播间房间查询') >= 0) { // 直播间房间查询 + il_id
         sayOrquiet = true;
         console.log('直播间房间查询event！');
+        let fileBox_audience = null;
         (async () => {
             let il_id = content.slice(7, content.length);
             let result = await OrclUtil.executeSql('edwpool', `SELECT dr.room_id,
@@ -127,29 +129,31 @@ async function onMessage(msg) {
             console.log(result.rows);
             if (result.rows.length > 0) {
                 say_someting = '此房间数据如下' + '：\r\nroom_id：' + result.rows[0][0]
-                    + '\r\n时长：' + result.rows[0][1] + '\r\n照片数量：' + result.rows[0][2]
+                    + '\r\n时长(min)：' + result.rows[0][1] + '\r\n照片数量：' + result.rows[0][2]
                     + '\r\n名称：' + result.rows[0][3] + '\r\n开始时间：' + result.rows[0][4]
                     + '\r\n结束事件：' + result.rows[0][5];
                 let audience = await OrclUtil.executeSql('edwpool', `SELECT da.room_id,
                   NVL2(da.SSO_ID,da.SSO_ID||'-'||da.USERNAME,da.e_account_id||'-'||da.e_account_name) audience_name
                   FROM webcast.az_webcast_dmt_audience da
                   where da.room_id=\'${il_id}\'`);
-                if (audience.rows.length > 0) {
+                if (audience.rows.length > 0 && audience.rows.length <= 500) {
                     FileUtil.delDir('files');
                     for (let i = 0;i < audience.rows.length;i++) {
-                        fs.writeFile('files/audience_' + il_id + '.text',audience.rows[i][1],'utf8',function(err){
+                        fs.appendFile('files/audience_' + il_id + '.txt',audience.rows[i][1] + '\r\n','utf8',function(err){
                             if(err) {
                                 console.log('写文件出错了，错误是：'+err);
-                            } else {
-
                             }
                         });
                     }
+                    fileBox_audience = FileBox.fromFile('files/audience_' + il_id + '.txt', result.rows[0][3] + ' 参会者名单.txt');
+                } else {
+                    say_someting += '\r\n参会者过多,请在报告端查看';
                 }
             } else {
                 say_someting = '无此房间数据';
             }
             await contact_for_say.say(say_someting);
+            await contact_for_say.say(fileBox_audience);
             console.log('say_someting=' + say_someting);
         })();
     } else if(content.indexOf('员工查询') >= 0) {
@@ -186,6 +190,10 @@ async function onMessage(msg) {
 
     console.log('sayOrquiet=' + sayOrquiet);
 }
+
+bagpipe.on('full', function (length) {
+    console.warn('队列拥堵，目前队列长度为:' + length);
+});
 
 bot
     .on('scan', onScan)
