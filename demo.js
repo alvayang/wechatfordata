@@ -4,7 +4,6 @@ const QrcodeTerminal = require('qrcode-terminal');
 const OrclUtil = require('./util/orcl-util');
 const sihuo = require('./util/sihuo');
 const BAU_schedule = require("./schedule/BAU-schedule");
-const Bagpipe = require('bagpipe');
 const { FileBox } = require('file-box');
 const fs = require('fs');
 const FileUtil = require('./util/file-util');
@@ -20,8 +19,6 @@ const bot = new Wechaty({
     puppet,
     name, // generate xxxx.memory-card.json and save login data for the next login
 });
-
-const bagpipe = new Bagpipe(5000); // 设定最大并发数
 
 // 登录
 async function onLogin (user) {
@@ -190,10 +187,6 @@ async function onMessage(msg) {
 
     console.log('sayOrquiet=' + sayOrquiet);
 }
-
-bagpipe.on('full', function (length) {
-    console.warn('队列拥堵，目前队列长度为:' + length);
-});
 
 bot
     .on('scan', onScan)
