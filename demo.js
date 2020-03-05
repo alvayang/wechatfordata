@@ -17,7 +17,7 @@ bot
     .on('login',   `./listener/on-login`)
     .on('scan', `./listener/on-scan`)
     .on('message', `./listener/on-message`)
-    .on('logout',  onLogout)
+    .on('logout',  `./listener/on-logout`)
     .start()
     .then(() => console.log('开始登陆微信'))
     .catch(e => console.error('捕捉error\r\n' + e));
